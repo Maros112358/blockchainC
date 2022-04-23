@@ -2,15 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include "lib/sha256.h"
-
-typedef unsigned char BYTE;    
-typedef struct{
-    unsigned long int timestamp;
-    BYTE* data;
-    BYTE* prevBlockHash;
-    BYTE* hash;
-} Block;
+#include "../lib/sha256.h"
+#include "./block.h"
 
 BYTE* sha256(BYTE* data, size_t len) {
     /* 
@@ -51,9 +44,23 @@ void generateBlockHash(Block* block) {
     return;
 }
 
-int main() {
-     return 0;
+Block* createBlock(BYTE* data, BYTE* prevBlockHash) {
+    /* 
+        Creates a block with given data and previous block hash
+    */
+    Block* block = malloc(sizeof(Block));
+
+    block -> timestamp = (unsigned long) time(NULL);
+    block -> data = data;
+    block -> prevBlockHash = prevBlockHash;
+
+    generateBlockHash(block);
+    return block;
 }
 
-
-// block -> timestamp = (unsigned long) time(NULL);
+Block* newGenesisBlock() {
+    /*
+        Creates genesis block (first block in blockchain)
+    */
+    return createBlock("Genesis Block", "");
+}
