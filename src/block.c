@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "../lib/sha256.h"
-#include "./block.h"
+#include "./proofOfWork.h"
 
 BYTE* sha256(BYTE* data, size_t len) {
     /* 
@@ -19,7 +19,7 @@ BYTE* sha256(BYTE* data, size_t len) {
     return hash;
 } 
 
-void generateBlockHash(Block* block) {
+BYTE* generateBlockHash(Block* block) {
     /* 
         generates hash of the block from its data, previous block hash, and timestamp
     */
@@ -39,9 +39,9 @@ void generateBlockHash(Block* block) {
     strcat(headers, block -> data);
     strcat(headers, timestampStr);
 
-    block -> hash = sha256(headers, strlen(headers));
+    BYTE* hash = sha256(headers, strlen(headers));
     free(headers);
-    return;
+    return hash;
 }
 
 Block* createBlock(BYTE* data, BYTE* prevBlockHash) {
@@ -54,7 +54,18 @@ Block* createBlock(BYTE* data, BYTE* prevBlockHash) {
     block -> data = data;
     block -> prevBlockHash = prevBlockHash;
 
-    generateBlockHash(block);
+    // proof of work
+    ProofOfWork* pow = NewProofOfWork(block);
+    block -> hash = runProofOfWork(pow);
+    block -> nonce = pow -> nonce;
+
+    if (strcmp(block -> data, "Steal something") == 0) {
+        pow -> nonce++;
+    }
+
+    // validate proof of work
+    printf("Validation of proof of work: %d\n", validateProofOfWork(pow));
+    printf("\n");
     return block;
 }
 
